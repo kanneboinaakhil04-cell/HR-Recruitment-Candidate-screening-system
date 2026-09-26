@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for {{ job.title }} - HR Screening System{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 2rem auto;">
+    <!-- Navigation Back Link -->
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Job Openings
+        </a>
+    </div>
+
+    <!-- Job Header Summary Card -->
+    <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <span class="badge badge-info" style="margin-bottom: 0.5rem;"><i class="fa-solid fa-building"></i> Open Position</span>
+                <h1 style="font-size: 1.8rem; font-weight: 800;">{{ job.title }}</h1>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">
+                    <i class="fa-solid fa-location-dot" style="color: #f43f5e;"></i> {{ job.location }} &nbsp;|&nbsp; 
+                    <i class="fa-solid fa-user-clock" style="color: #38bdf8;"></i> Min {{ job.min_experience_years }} Yrs Exp &nbsp;|&nbsp; 
+                    <i class="fa-solid fa-graduation-cap" style="color: #10b981;"></i> Qualification: {{ job.min_qualification }}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <strong style="font-size: 0.9rem; color: var(--text-primary); display: block; margin-bottom: 0.5rem;">Job Description:</strong>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;">{{ job.description }}</p>
+        </div>
+
+        <div style="margin-top: 1rem;">
+            <strong style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Required Skills:</strong>
+            <div>
+                {% for sname in job.get_skill_names() %}
+                    <span class="badge badge-skill" style="padding: 0.35rem 0.65rem; font-size: 0.82rem;">{{ sname }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Application Form Panel -->
+    <div class="glass-panel" style="padding: 2.5rem;">
+        <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+            <h2 style="font-size: 1.4rem; font-weight: 800;">
+                <i class="fa-solid fa-file-pen" style="color: #6366f1;"></i> Candidate Application Form
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Confirm your details and attach your resume to submit an official application.</p>
+        </div>
+
+        <form action="{{ url_for('candidate.apply_job', job_id=job.id) }}" method="POST" enctype="multipart/form-data">
+            
+            <!-- Personal Information Section -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="full_name">Full Name *</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control" value="{{ profile.full_name if profile else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number *</label>
+                    <input type="text" id="phone" name="phone" class="form-control" placeholder="+1 (555) 000-0000" value="{{ profile.phone if profile else '' }}" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="education">Highest Qualification *</label>
+                    <select id="education" name="education" class="form-control">
+                        <option value="B.Tech" {{ 'selected' if profile and profile.education == 'B.Tech' else '' }}>B.Tech / B.E.</option>
+                        <option value="M.Tech" {{ 'selected' if profile and profile.education == 'M.Tech' else '' }}>M.Tech / M.E.</option>
+                        <option value="MCA" {{ 'selected' if profile and profile.education == 'MCA' else '' }}>MCA</option>
+                        <option value="B.Sc" {{ 'selected' if profile and profile.education == 'B.Sc' else '' }}>B.Sc / BCA</option>
+                        <option value="MBA" {{ 'selected' if profile and profile.education == 'MBA' else '' }}>MBA</option>
+                        <option value="Ph.D" {{ 'selected' if profile and profile.education == 'Ph.D' else '' }}>Ph.D</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="experience_years">Years of Experience *</label>
+                    <input type="number" id="experience_years" name="experience_years" class="form-control" min="0" max="40" value="{{ profile.experience_years if profile else 0 }}" required>
+                </div>
+            </div>
+
+            <!-- Resume Document Attachment Section -->
+            <div style="background: rgba(99, 102, 241, 0.08); border: 2px dashed rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 1.5rem; text-align: center; margin-top: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem; color: #8b5cf6; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">Attach Resume Document</h4>
+                <p style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.75rem;">Upload PDF (.pdf) or Word (.docx) file for automated HR screening</p>
+                
+                {% if profile and profile.resume_filename %}
+                    <div style="margin-bottom: 0.75rem; padding: 0.4rem 0.85rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; display: inline-block; color: #34d399; font-size: 0.82rem; font-weight: 600;">
+                        <i class="fa-solid fa-file-check"></i> Attached Resume: {{ profile.resume_filename }}
+                    </div>
+                {% endif %}
+
+                <input type="file" name="resume_file" id="resume_file" accept=".pdf,.docx" class="form-control" style="max-width: 420px; margin: 0 auto;" {{ 'required' if not profile or not profile.resume_filename }}>
+            </div>
+
+            <!-- Submission Actions -->
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.85rem; font-size: 1rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Official Application
+                </button>
+                <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-secondary" style="padding: 0.85rem 1.5rem;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

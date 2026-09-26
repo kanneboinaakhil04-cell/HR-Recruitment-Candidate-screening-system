@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HR Recruitment & Candidate Screening System{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('app-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="brand-logo">
+                <i class="fa-solid fa-user-check" style="color: #6366f1;"></i>
+                <span>Smart<span style="color: #8b5cf6;">Screen</span></span>
+                <span class="brand-badge">HR System</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+                
+                {% if role == 'hr' %}
+                    <li><a href="{{ url_for('hr.dashboard') }}" class="nav-link"><i class="fa-solid fa-chart-line"></i> HR Dashboard</a></li>
+                    <li><a href="{{ url_for('hr.job_create') }}" class="nav-link"><i class="fa-solid fa-plus-circle"></i> Create Job</a></li>
+                    <li style="margin-left: 1rem;">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);"><i class="fa-solid fa-user-tie"></i> {{ full_name }}</span>
+                    </li>
+                    <li><a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+                {% elif role == 'candidate' %}
+                    <li><a href="{{ url_for('candidate.dashboard') }}" class="nav-link"><i class="fa-solid fa-briefcase"></i> Job Feed</a></li>
+                    <li><a href="{{ url_for('candidate.profile') }}" class="nav-link"><i class="fa-solid fa-file-user"></i> My Profile & Resume</a></li>
+                    <li style="margin-left: 1rem;">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);"><i class="fa-solid fa-user"></i> {{ full_name }}</span>
+                    </li>
+                    <li><a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('auth.hr_login') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-user-shield"></i> HR Portal</a></li>
+                    <li><a href="{{ url_for('auth.candidate_login') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-user-graduate"></i> Candidate Portal</a></li>
+                {% endif %}
+
+                <!-- Dark / Light Theme Toggle -->
+                <li>
+                    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Light/Dark Mode">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Body Container -->
+    <main class="main-content">
+        <!-- Flash Alerts -->
+        <div class="alert-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span><i class="fa-solid fa-circle-info"></i> {{ message }}</span>
+                            <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div style="max-width: 1400px; margin: 0 auto;">
+            <p>&copy; 2026 HR Recruitment & Candidate Screening System. Built with Flask, MySQL/SQLite, Pandas, Scikit-learn, ADSA & DMGT.</p>
+        </div>
+    </footer>
+
+    <!-- Custom Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

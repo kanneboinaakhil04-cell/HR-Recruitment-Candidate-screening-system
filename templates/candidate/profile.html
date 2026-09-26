@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}My Candidate Profile & Resume Upload{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 2rem auto;">
+    <div class="glass-panel" style="padding: 2.5rem;">
+        <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.6rem; font-weight: 800;">Candidate Profile & Resume Management</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Upload your resume (PDF/DOCX) to automatically extract skills, experience, and education details</p>
+        </div>
+
+        <form action="{{ url_for('candidate.profile') }}" method="POST" enctype="multipart/form-data">
+            
+            <!-- Resume Uploader Section -->
+            <div style="background: rgba(99, 102, 241, 0.08); border: 2px dashed rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 1.75rem; text-align: center; margin-bottom: 2rem;">
+                <div style="font-size: 2.5rem; color: #8b5cf6; margin-bottom: 0.75rem;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Upload Candidate Resume</h4>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Supports PDF (.pdf) and Word (.docx) formats (Max 16 MB)</p>
+                
+                {% if profile and profile.resume_filename %}
+                    <div style="margin-bottom: 1rem; padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.15); border-radius: 6px; display: inline-block; color: #34d399; font-size: 0.85rem; font-weight: 600;">
+                        <i class="fa-solid fa-file-check"></i> Current Resume: {{ profile.resume_filename }}
+                    </div>
+                {% endif %}
+
+                <input type="file" name="resume_file" id="resume_file" accept=".pdf,.docx" class="form-control" style="max-width: 400px; margin: 0 auto;">
+            </div>
+
+            <!-- Profile Details Form -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="full_name">Full Name *</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control" value="{{ profile.full_name if profile else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" class="form-control" value="{{ profile.phone if profile else '' }}">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="education">Highest Education Degree</label>
+                    <select id="education" name="education" class="form-control">
+                        <option value="B.Tech" {{ 'selected' if profile and profile.education == 'B.Tech' else '' }}>B.Tech / B.E.</option>
+                        <option value="M.Tech" {{ 'selected' if profile and profile.education == 'M.Tech' else '' }}>M.Tech / M.E.</option>
+                        <option value="MCA" {{ 'selected' if profile and profile.education == 'MCA' else '' }}>MCA</option>
+                        <option value="B.Sc" {{ 'selected' if profile and profile.education == 'B.Sc' else '' }}>B.Sc / BCA</option>
+                        <option value="MBA" {{ 'selected' if profile and profile.education == 'MBA' else '' }}>MBA</option>
+                        <option value="Ph.D" {{ 'selected' if profile and profile.education == 'Ph.D' else '' }}>Ph.D</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="experience_years">Years of Experience</label>
+                    <input type="number" id="experience_years" name="experience_years" class="form-control" min="0" max="40" value="{{ profile.experience_years if profile else 0 }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="manual_skills">Additional Manual Skills (Comma-Separated)</label>
+                <input type="text" id="manual_skills" name="manual_skills" class="form-control" placeholder="Git, Docker, REST API, Agile">
+            </div>
+
+            <!-- Identified Extracted Skills Display -->
+            {% if profile and profile.skills %}
+                <div style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                    <label class="form-label"><i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Identified Skills from Resume ({{ profile.skills | length }})</label>
+                    <div>
+                        {% for skill in profile.skills %}
+                            <span class="badge badge-skill" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">{{ skill.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Profile & Parse Resume
+                </button>
+                <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

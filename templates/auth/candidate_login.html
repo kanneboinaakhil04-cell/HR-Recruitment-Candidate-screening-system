@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Login - HR Screening System{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 3rem auto;">
+    <div class="glass-panel" style="padding: 2.5rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 56px; height: 56px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #10b981; margin-bottom: 1rem;">
+                <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Candidate Portal Login</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Apply for openings and track resume screening score</p>
+        </div>
+
+        <form action="{{ url_for('auth.candidate_login') }}" method="POST" autocomplete="off">
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" autocomplete="off" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" autocomplete="new-password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 1rem;">
+                <i class="fa-solid fa-right-to-bracket"></i> Candidate Login
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-secondary);">
+            New candidate? <a href="{{ url_for('auth.candidate_register') }}" style="color: var(--accent-amber); text-decoration: none; font-weight: 600;">Create New Candidate Profile</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

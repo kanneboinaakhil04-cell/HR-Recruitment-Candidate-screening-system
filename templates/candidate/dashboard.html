@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Portal & Job Feed{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800;">Candidate Dashboard</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Explore open positions, submit your resume, and track real-time application screening status</p>
+    </div>
+    <a href="{{ url_for('candidate.profile') }}" class="btn btn-primary">
+        <i class="fa-solid fa-file-arrow-up"></i> Manage Profile & Resume
+    </a>
+</div>
+
+<!-- Resume Status Alert Banner if not uploaded -->
+{% if not profile or not profile.resume_filename %}
+    <div class="alert alert-warning" style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Resume Missing!</strong> Please upload your PDF or Word DOCX resume in your profile before applying for jobs.
+            </div>
+        </div>
+        <a href="{{ url_for('candidate.profile') }}" class="btn btn-secondary btn-sm" style="margin-left: auto;">Upload Now</a>
+    </div>
+{% endif %}
+
+<!-- Submitted Applications Section -->
+<div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2.5rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem;">
+        <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> My Job Applications
+    </h3>
+
+    {% if applications %}
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Required Skills</th>
+                        <th>Applied On</th>
+                        <th>Screening Match Score</th>
+                        <th>Status</th>
+                        <th>Score Breakdown & Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job_id, app in applications.items() %}
+                        <tr>
+                            <td>
+                                <strong style="font-size: 0.95rem; color: var(--text-primary);">{{ app.job.title }}</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ app.job.location }}</div>
+                            </td>
+                            <td>
+                                {% for sname in app.job.get_skill_names() %}
+                                    <span class="badge badge-skill">{{ sname }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>{{ app.applied_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <span class="score-badge {{ 'score-high' if app.match_score >= 75 else ('score-medium' if app.match_score >= 50 else 'score-low') }}">
+                                    {{ app.match_score }}%
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {{ 'badge-success' if app.status == 'Shortlisted' else ('badge-info' if app.status == 'Reviewing' else ('badge-danger' if app.status == 'Rejected' else 'badge-warning')) }}">
+                                    {{ app.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('screening.screening_result', app_id=app.id) }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.65rem; border: 1px solid rgba(99, 102, 241, 0.4); color: #a5b4fc;">
+                                    <i class="fa-solid fa-circle-question"></i> Why {{ app.match_score }}%? (Breakdown)
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="color: var(--text-secondary); text-align: center; padding: 1.5rem;">You have not applied for any jobs yet. Browse open positions below.</p>
+    {% endif %}
+</div>
+
+<!-- Open Positions Feed -->
+<div class="glass-panel" style="padding: 1.5rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem;">
+        <i class="fa-solid fa-briefcase" style="color: #38bdf8;"></i> Open Job Positions
+    </h3>
+
+    {% if jobs %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;">
+            {% for job in jobs %}
+                <div class="glass-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <h4 style="font-size: 1.15rem; font-weight: 700;">{{ job.title }}</h4>
+                        <span class="badge badge-info">{{ job.location }}</span>
+                    </div>
+
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+                        {{ job.description[:140] }}...
+                    </p>
+
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                        <div><i class="fa-solid fa-user-clock"></i> Experience: Min {{ job.min_experience_years }} Years</div>
+                        <div><i class="fa-solid fa-graduation-cap"></i> Qualification: {{ job.min_qualification }}</div>
+                    </div>
+
+                    <div style="margin-bottom: 1.25rem;">
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 600;">Required Skills:</span>
+                        {% for sname in job.get_skill_names() %}
+                            <span class="badge badge-skill">{{ sname }}</span>
+                        {% endfor %}
+                    </div>
+
+                    {% if job.id in applications %}
+                        <button class="btn btn-secondary" style="width: 100%;" disabled>
+                            <i class="fa-solid fa-check-circle" style="color: #34d399;"></i> Application Submitted ({{ applications[job.id].status }})
+                        </button>
+                    {% else %}
+                        <a href="{{ url_for('candidate.apply_job', job_id=job.id) }}" class="btn btn-primary" style="width: 100%; text-decoration: none;">
+                            <i class="fa-solid fa-paper-plane"></i> Apply for Opening
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No open positions available at this time.</p>
+    {% endif %}
+</div>
+{% endblock %}

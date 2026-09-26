@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Registration - HR Screening System{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 2rem auto;">
+    <div class="glass-panel" style="padding: 2.5rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Candidate Account Registration</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Register to upload your resume and apply for job openings</p>
+        </div>
+
+        <form action="{{ url_for('auth.candidate_register') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" class="form-control" placeholder="Alex Johnson" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="+1 555-0192">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Create a password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 1rem;">
+                <i class="fa-solid fa-user-plus"></i> Register Candidate Account
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-secondary);">
+            Already registered? <a href="{{ url_for('auth.candidate_login') }}" style="color: #38bdf8; text-decoration: none; font-weight: 600;">Candidate Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

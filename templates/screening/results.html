@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Screening Report - {{ candidate.full_name }} for {{ job.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+        <a href="{{ url_for('hr.dashboard') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <span class="badge badge-info"><i class="fa-solid fa-microchip"></i> Automated Screening Report</span>
+    </div>
+    <h1 style="font-size: 1.8rem; font-weight: 800;">Candidate Evaluation: {{ candidate.full_name }}</h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">Job Role: <strong>{{ job.title }}</strong> | Applied on: {{ app.applied_at.strftime('%Y-%m-%d %H:%M') }}</p>
+</div>
+
+<!-- Top Overview Banner -->
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Overall Composite Screening Score</div>
+        <div style="display: flex; align-items: baseline; gap: 1rem; margin-top: 0.25rem;">
+            <span class="score-badge {{ 'score-high' if match.match_score >= 75 else ('score-medium' if match.match_score >= 50 else 'score-low') }}" style="font-size: 2.5rem; padding: 0.5rem 1.25rem;">
+                {{ match.match_score }}%
+            </span>
+            <span style="color: var(--text-secondary); font-size: 1rem;">
+                Match Level: 
+                <strong style="color: {{ '#34d399' if match.match_score >= 75 else ('#fbbf24' if match.match_score >= 50 else '#f87171') }};">
+                    {{ 'EXCELLENT MATCH' if match.match_score >= 75 else ('MODERATE MATCH' if match.match_score >= 50 else 'LOW MATCH') }}
+                </strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- Manual HR Shortlisting & Decision Panel -->
+    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem 1.25rem;">
+        <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-user-gear" style="color: var(--accent-amber);"></i> Human HR Shortlisting Decision:
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <span id="status-badge-{{ app.id }}" class="badge {{ 'badge-success' if app.status == 'Shortlisted' else ('badge-info' if app.status == 'Reviewing' else ('badge-danger' if app.status == 'Rejected' else 'badge-warning')) }}" style="font-size: 0.9rem; padding: 0.4rem 0.85rem;">
+                {{ app.status }}
+            </span>
+            <button type="button" onclick="updateAppStatus({{ app.id }}, 'Shortlisted')" class="btn btn-sm" style="background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); font-weight: 700;">
+                <i class="fa-solid fa-user-check"></i> Shortlist Candidate
+            </button>
+            <button type="button" onclick="updateAppStatus({{ app.id }}, 'Reviewing')" class="btn btn-sm" style="background: rgba(56, 189, 248, 0.25); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5); font-weight: 700;">
+                <i class="fa-solid fa-eye"></i> Mark Under Review
+            </button>
+            <button type="button" onclick="updateAppStatus({{ app.id }}, 'Rejected')" class="btn btn-sm" style="background: rgba(244, 63, 94, 0.25); color: #f87171; border: 1px solid rgba(244, 63, 94, 0.5); font-weight: 700;">
+                <i class="fa-solid fa-user-xmark"></i> Reject Candidate
+            </button>
+            <select onchange="updateAppStatus({{ app.id }}, this.value)" class="form-control" style="width: 130px; font-weight: 600; padding: 0.3rem 0.5rem; font-size: 0.8rem;">
+                <option value="Applied" {{ 'selected' if app.status == 'Applied' }}>Applied</option>
+                <option value="Reviewing" {{ 'selected' if app.status == 'Reviewing' }}>Reviewing</option>
+                <option value="Shortlisted" {{ 'selected' if app.status == 'Shortlisted' }}>Shortlisted</option>
+                <option value="Rejected" {{ 'selected' if app.status == 'Rejected' }}>Rejected</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Transparent Score Explanation Card for Candidate & HR -->
+<div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2.5rem; border-left: 4px solid #6366f1; background: rgba(99, 102, 241, 0.08);">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">
+        <i class="fa-solid fa-circle-info" style="color: #6366f1;"></i> Why is this Screening Score {{ match.match_score }}%?
+    </h3>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0.5rem;">
+        This automated screening score of <strong>{{ match.match_score }}%</strong> is calculated using a transparent weighted formula comparing candidate qualifications against this specific job role (<strong>{{ job.title }}</strong>):
+    </p>
+    <ul style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.8; margin-left: 1.25rem;">
+        <li><strong>1. Skill Set Match (50% Weight): {{ match.skill_score }}%</strong> — Candidate possesses <strong>{{ match.matched_skills | length }}</strong> of the <strong>{{ (match.matched_skills | length) + (match.missing_skills | length) }}</strong> required technical skills for this position.</li>
+        <li><strong>2. Experience Level (30% Weight): {{ match.exp_score }}%</strong> — Candidate has <strong>{{ candidate.experience_years }}</strong> years experience vs <strong>{{ job.min_experience_years }}</strong> years required by HR.</li>
+        <li><strong>3. Education Level (20% Weight): {{ match.edu_score }}%</strong> — Candidate qualification degree (<strong>{{ candidate.education or 'Bachelor' }}</strong>) evaluated against minimum requirement (<strong>{{ job.min_qualification }}</strong>).</li>
+    </ul>
+</div>
+
+<!-- 4-Factor Breakdown Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+    <div class="glass-card">
+        <div style="color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">1. DMGT Skill Score (50%)</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #a5b4fc; margin-top: 0.35rem;">{{ match.skill_score }}%</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">{{ match.matched_skills | length }} / {{ (match.matched_skills | length) + (match.missing_skills | length) }} Required Skills Matched</p>
+    </div>
+
+    <div class="glass-card">
+        <div style="color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">2. Experience Score (30%)</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #38bdf8; margin-top: 0.35rem;">{{ match.exp_score }}%</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Candidate: {{ candidate.experience_years }} yrs | Job Min: {{ job.min_experience_years }} yrs</p>
+    </div>
+
+    <div class="glass-card">
+        <div style="color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">3. Education Rank (20%)</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #34d399; margin-top: 0.35rem;">{{ match.edu_score }}%</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Degree: {{ candidate.education or 'Bachelor' }} vs Min {{ job.min_qualification }}</p>
+    </div>
+
+    <div class="glass-card">
+        <div style="color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">4. TF-IDF Cosine Similarity</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #d946ef; margin-top: 0.35rem;">{{ match.tfidf_score }}%</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">NLP Text Vector Similarity</p>
+    </div>
+</div>
+
+<!-- DMGT Set Theory Skill Matching Breakdown -->
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2.5rem;">
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">
+        <i class="fa-solid fa-subscript" style="color: #6366f1;"></i> DMGT Set Theory Skill Analysis
+    </h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+        <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #34d399; margin-bottom: 0.75rem;">
+                <i class="fa-solid fa-circle-check"></i> Matched Required Skills ($S_{job} \cap S_{cand}$)
+            </h4>
+            {% if match.matched_skills %}
+                <div>
+                    {% for skill in match.matched_skills %}
+                        <span class="badge badge-success" style="font-size: 0.85rem; padding: 0.4rem 0.75rem; margin: 0.2rem;">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.88rem;">No required skills matched.</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #f87171; margin-bottom: 0.75rem;">
+                <i class="fa-solid fa-circle-xmark"></i> Missing Required Skills ($S_{job} \setminus S_{cand}$)
+            </h4>
+            {% if match.missing_skills %}
+                <div>
+                    {% for skill in match.missing_skills %}
+                        <span class="badge badge-missing" style="font-size: 0.85rem; padding: 0.4rem 0.75rem; margin: 0.2rem;">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #34d399; font-size: 0.88rem; font-weight: 600;">All required skills present in candidate resume!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Mathematical Formula Box -->
+    <div class="math-box">
+DMGT Mathematical Formulation:
+- S_job = { {{ job.get_skill_names() | join(', ') }} }
+- S_cand = { {{ match.matched_skills | join(', ') }}{{ ', ' if match.extra_skills else '' }}{{ match.extra_skills | join(', ') }} }
+
+Intersection S_matched = S_job ∩ S_cand = { {{ match.matched_skills | join(', ') }} }
+Skill Match Score = |S_matched| / |S_job| * 100% = {{ match.matched_skills | length }} / {{ (match.matched_skills | length) + (match.missing_skills | length) }} * 100% = {{ match.skill_score }}%
+Jaccard Similarity Index = |S_job ∩ S_cand| / |S_job ∪ S_cand| = {{ match.jaccard_similarity }}%
+
+    Final Score = (0.50 * {{ match.skill_score }}) + (0.30 * {{ match.exp_score }}) + (0.20 * {{ match.edu_score }}) = {{ match.match_score }}%
+    </div>
+</div>
+
+<!-- Skill Gap Analysis & Recommended Training Courses Card -->
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2.5rem; border: 1px solid rgba(245, 158, 11, 0.3);">
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #fbbf24;">
+        <i class="fa-solid fa-lightbulb"></i> Candidate Skill Gap & Recommended Upskilling Pathways
+    </h3>
+    
+    {% if match.recommendations %}
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            To help candidate <strong>{{ candidate.full_name }}</strong> qualify for higher screening match scores for <strong>{{ job.title }}</strong>, the following targeted learning courses are recommended based on missing skills:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+            {% for rec in match.recommendations %}
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: #f87171; font-weight: 700;">Missing Skill Gap:</div>
+                    <div style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem 0;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i> {{ rec.skill }}
+                    </div>
+                    <div style="font-size: 0.82rem; color: #a5b4fc; font-weight: 600;">
+                        <i class="fa-solid fa-graduation-cap"></i> Recommended Course:
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-primary); margin-top: 0.2rem;">
+                        {{ rec.recommended_course }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding: 1rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; color: #34d399; font-weight: 600;">
+            <i class="fa-solid fa-circle-check"></i> Zero Skill Gaps! Candidate possesses all required technical skills for this job opening.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Original Uploaded Document Viewer Section -->
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700;">
+                <i class="fa-solid fa-file-contract" style="color: #8b5cf6;"></i> Original Uploaded Resume Document
+            </h3>
+            {% if candidate.resume_filename %}
+                <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.2rem;">
+                    File Name: <strong>{{ candidate.resume_filename }}</strong>
+                </p>
+            {% endif %}
+        </div>
+
+        {% if candidate.resume_filename %}
+            <div style="display: flex; gap: 0.75rem;">
+                <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-up-right-from-square"></i> Open Original Document
+                </a>
+                <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" download class="btn btn-secondary btn-sm">
+                    <i class="fa-solid fa-download"></i> Download File
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if candidate.resume_filename %}
+        {% set ext = candidate.resume_filename.rsplit('.', 1)[-1].lower() if '.' in candidate.resume_filename else '' %}
+        
+        {% if ext == 'pdf' %}
+            <!-- Embedded PDF Document Viewer -->
+            <div style="border: 1px solid var(--border-glow); border-radius: var(--radius-sm); overflow: hidden; background: #1e293b;">
+                <iframe src="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" width="100%" height="650px" style="border: none;">
+                    <p>Your browser does not support inline PDF viewing. <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" target="_blank">Click here to download the PDF resume file.</a></p>
+                </iframe>
+            </div>
+        {% else %}
+            <!-- Word DOCX File Download & Preview Banner -->
+            <div class="glass-card" style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.35); padding: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div style="width: 56px; height: 56px; background: rgba(37, 99, 235, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #3b82f6;">
+                        <i class="fa-solid fa-file-word"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Uploaded Word Document (.docx)</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.2rem;">File: {{ candidate.resume_filename }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" target="_blank" download class="btn btn-primary">
+                    <i class="fa-solid fa-file-arrow-down"></i> Download & Open Word Document
+                </a>
+            </div>
+        {% endif %}
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">No uploaded resume document file on record.</p>
+    {% endif %}
+</div>
+
+<!-- Parsed Resume Text Content Section -->
+<div class="glass-panel" style="padding: 2rem;">
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">
+        <i class="fa-solid fa-file-code" style="color: #38bdf8;"></i> Extracted NLP Resume Text Content
+    </h3>
+    {% if candidate.resume_text %}
+        <div style="background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-primary); max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;">
+{{ candidate.resume_text }}
+        </div>
+    {% else %}
+        <p style="color: var(--text-muted);">No parsed resume text available for this candidate.</p>
+    {% endif %}
+</div>
+{% endblock %}

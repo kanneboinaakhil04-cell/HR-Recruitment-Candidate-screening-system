@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Job Opening - HR Screening System{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 2rem auto;">
+    <div class="glass-panel" style="padding: 2.5rem;">
+        <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.6rem; font-weight: 800;">{{ action }} Job Opening</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Define job role details, experience requirements, and required skill taxonomy</p>
+        </div>
+
+        <form action="{{ url_for('hr.job_edit', job_id=job.id) if job else url_for('hr.job_create') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label" for="title">Job Title *</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Senior Python & Data Engineer" value="{{ job.title if job else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="required_skills">Required Skills (Comma-Separated) *</label>
+                <input type="text" id="required_skills" name="required_skills" class="form-control" placeholder="Python, SQL, Flask, Excel, DBMS, Pandas" value="{{ job.required_skills_text if job else '' }}" required>
+                <span style="font-size: 0.78rem; color: #a5b4fc; margin-top: 0.25rem; display: block;">
+                    <i class="fa-solid fa-lightbulb"></i> These skills will form the $S_{job}$ Set for DMGT intersection math.
+                </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="min_qualification">Minimum Qualification *</label>
+                    <select id="min_qualification" name="min_qualification" class="form-control" required>
+                        <option value="B.Tech" {{ 'selected' if job and job.min_qualification == 'B.Tech' else '' }}>B.Tech / B.E.</option>
+                        <option value="M.Tech" {{ 'selected' if job and job.min_qualification == 'M.Tech' else '' }}>M.Tech / M.E.</option>
+                        <option value="MCA" {{ 'selected' if job and job.min_qualification == 'MCA' else '' }}>MCA</option>
+                        <option value="B.Sc" {{ 'selected' if job and job.min_qualification == 'B.Sc' else '' }}>B.Sc / BCA</option>
+                        <option value="Ph.D" {{ 'selected' if job and job.min_qualification == 'Ph.D' else '' }}>Ph.D / Doctorate</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="min_experience">Minimum Experience (Years) *</label>
+                    <input type="number" id="min_experience" name="min_experience" class="form-control" min="0" max="30" value="{{ job.min_experience_years if job else '2' }}" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="location">Job Location</label>
+                    <input type="text" id="location" name="location" class="form-control" placeholder="Remote / New York / Hybrid" value="{{ job.location if job else 'Remote' }}">
+                </div>
+
+                {% if job %}
+                <div class="form-group">
+                    <label class="form-label" for="status">Job Opening Status</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="Open" {{ 'selected' if job.status == 'Open' else '' }}>Open</option>
+                        <option value="Closed" {{ 'selected' if job.status == 'Closed' else '' }}>Closed</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">Detailed Job Description *</label>
+                <textarea id="description" name="description" class="form-control" rows="5" placeholder="Describe role responsibilities, key deliverables, and team expectations..." required>{{ job.description if job else '' }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa-solid fa-save"></i> Save Job Opening
+                </button>
+                <a href="{{ url_for('hr.dashboard') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

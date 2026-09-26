@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Resume - {{ candidate.full_name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+        <a href="{{ url_for('hr.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to HR Dashboard
+        </a>
+        <span class="badge badge-info"><i class="fa-solid fa-file-user"></i> Candidate Resume Record</span>
+    </div>
+    <h1 style="font-size: 1.8rem; font-weight: 800;">Candidate Profile: {{ candidate.full_name }}</h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+        Email: <strong>{{ candidate.user.email }}</strong> | Phone: <strong>{{ candidate.phone or 'N/A' }}</strong> | 
+        Qualification: <strong>{{ candidate.education or 'N/A' }}</strong> | Experience: <strong>{{ candidate.experience_years }} Years</strong>
+    </p>
+</div>
+
+<!-- Extracted Skills Pill List -->
+<div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem;">
+        <i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Identified Technical Skills ({{ candidate.skills | length }})
+    </h3>
+    {% if candidate.skills %}
+        <div>
+            {% for skill in candidate.skills %}
+                <span class="badge badge-skill" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; margin: 0.2rem;">{{ skill.name }}</span>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--text-muted); font-size: 0.88rem;">No skills identified yet.</p>
+    {% endif %}
+</div>
+
+<!-- Original Uploaded Resume File Section -->
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700;">
+                <i class="fa-solid fa-file-contract" style="color: #8b5cf6;"></i> Original Uploaded Resume Document
+            </h3>
+            {% if candidate.resume_filename %}
+                <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.2rem;">
+                    File Name: <strong>{{ candidate.resume_filename }}</strong>
+                </p>
+            {% endif %}
+        </div>
+
+        {% if candidate.resume_filename %}
+            <div style="display: flex; gap: 0.75rem;">
+                <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-up-right-from-square"></i> Open Original File
+                </a>
+                <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" download class="btn btn-secondary btn-sm">
+                    <i class="fa-solid fa-download"></i> Download Document
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if candidate.resume_filename %}
+        {% set ext = candidate.resume_filename.rsplit('.', 1)[-1].lower() if '.' in candidate.resume_filename else '' %}
+        
+        {% if ext == 'pdf' %}
+            <!-- Embedded PDF Document Viewer -->
+            <div style="border: 1px solid var(--border-glow); border-radius: var(--radius-sm); overflow: hidden; background: #1e293b;">
+                <iframe src="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" width="100%" height="650px" style="border: none;">
+                    <p>Your browser does not support inline PDF viewing. <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" target="_blank">Click here to download the PDF resume file.</a></p>
+                </iframe>
+            </div>
+        {% else %}
+            <!-- Word DOCX File Download & Preview Banner -->
+            <div class="glass-card" style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.35); padding: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div style="width: 56px; height: 56px; background: rgba(37, 99, 235, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #3b82f6;">
+                        <i class="fa-solid fa-file-word"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Uploaded Word Document (.docx)</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.2rem;">File: {{ candidate.resume_filename }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('static', filename='uploads/' + candidate.resume_filename) }}" target="_blank" download class="btn btn-primary">
+                    <i class="fa-solid fa-file-arrow-down"></i> Download & Open Word Document
+                </a>
+            </div>
+        {% endif %}
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">No uploaded resume document file on record.</p>
+    {% endif %}
+</div>
+
+<!-- Extracted NLP Resume Text Content Section -->
+<div class="glass-panel" style="padding: 2rem;">
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">
+        <i class="fa-solid fa-file-code" style="color: #38bdf8;"></i> Extracted NLP Resume Text Content
+    </h3>
+    {% if candidate.resume_text %}
+        <div style="background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-primary); max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;">
+{{ candidate.resume_text }}
+        </div>
+    {% else %}
+        <p style="color: var(--text-muted);">No parsed resume text available for this candidate.</p>
+    {% endif %}
+</div>
+{% endblock %}
